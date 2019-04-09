@@ -1,9 +1,7 @@
 #This code performs an elastic net Cox regression on the variables in NHANES3 dataset
 #in order to identify the best predictors of mortality.
 
-setwd("C:/RNOneDrive/OneDrive/Documents/BBK/projects/blood/dev")
-
-nha3<-readRDS("../data/labmortNHA3.RDS")
+nha3<-readRDS("data/labmortNHA3.RDS")
 nha3<-nha3[nha3$age>=20,]
 nimp=nha3$hascancer+nha3$hasstroke+nha3$hasemphysema+nha3$hasheartattack+nha3$hasheartfailure+nha3$hasdiabetes
 nha3$nimp=ifelse(nimp>4,4,nimp)

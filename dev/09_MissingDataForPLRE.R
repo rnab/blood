@@ -1,13 +1,11 @@
 #Missing data example code for PLRe
 
-setwd("C:/RNOneDrive/OneDrive/Documents/BBK/projects/blood/dev")
-
 library(dplyr)
 library(ggplot2)
 library(mice)
 
 #Read in labmort_all
-lm<-readRDS("../data/labmort_all.RDS")
+lm<-readRDS("data/labmort_all.RDS")
 lm$bmi<-round(lm$bmi,1)
 lm$nimp<-as.factor(lm$nimp)
 #lm$d1y<-as.factor(lm$d1y)

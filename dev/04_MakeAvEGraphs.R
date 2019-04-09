@@ -1,12 +1,11 @@
-setwd("C:/RNOneDrive/OneDrive/Documents/BBK/projects/blood/dev")
 
 ###SETUP####
 library(dplyr)
 library(ggplot2)
 library(gridExtra)
 
-#nhall<-readRDS("../data/labmort_all.RDS")
-nha3<-readRDS("../data/labmortNHA3.RDS")
+#nhall<-readRDS("data/labmort_all.RDS")
+nha3<-readRDS("data/labmortNHA3.RDS")
 nha3<-nha3[nha3$age>=20,]
 
 #create a compound impairment variable
@@ -44,8 +43,8 @@ ggsave(filename="mort.png",path="./smr/",g)
 #Now need to merge this back onto nha3 as qx
 morttable<-rbind(mm,mf)
 
-saveRDS(morttable,"../data/morttable.RDS")
-write.csv(morttable,"../data/morttable.csv")
+saveRDS(morttable,"data/morttable.RDS")
+write.csv(morttable,"data/morttable.csv")
 
 nha3<-merge(nha3,morttable,by=c("sex","age"))
 
@@ -138,6 +137,6 @@ write.csv(z,"./smr/cotinine.csv")
 
 
 ####Quick lead analysis###
-nhall<-readRDS("../data/labmort_all.RDS")
+nhall<-readRDS("data/labmort_all.RDS")
 z=aggregate(nhall$pbp~nhall$src,FUN='mean',na.rm=T)
 write.csv(z,"./smr/bloodlead.csv")

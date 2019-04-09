@@ -1,11 +1,9 @@
-setwd("C:/RNOneDrive/OneDrive/Documents/BBK/projects/blood/dev")
-
 library(dplyr)
 library(ggplot2)
 library(mice)
 
 #Read in labmort_all
-lm<-readRDS("../data/labmort_all.RDS")
+lm<-readRDS("data/labmort_all.RDS")
 lm$bmi<-round(lm$bmi,1)
 lm$nimp<-as.factor(lm$nimp)
 #lm$d1y<-as.factor(lm$d1y)
@@ -88,7 +86,7 @@ names(toplot)<-c('x','var_imp','var')
 ggplot(data=toplot,aes(x=x,y=var,col=var_imp))+geom_point()
 
 
-morttable<-readRDS("../data/morttable.RDS")
+morttable<-readRDS("data/morttable.RDS")
 
 lmi_m<-merge(lmi,morttable,by=c("sex","age"))
 
@@ -132,8 +130,8 @@ ggsave(filename="RBCImpExample.png",device="png",path="./outputs",width=8,height
 
 
 ####Save Imputed Datasets ####
-saveRDS(lmi,"../data/lmi.RDS")
-write.csv(lmi,"../data/lmi.csv")
+saveRDS(lmi,"data/lmi.RDS")
+write.csv(lmi,"data/lmi.csv")
 
 
 ####MODEL IMPUTATION####
@@ -142,8 +140,8 @@ write.csv(lmi,"../data/lmi.csv")
 #lm$cotlevel<-as.factor(ifelse(is.na(lm$cop)==T,'',ifelse(lm$cop<1,"Low",ifelse(lm$cop<100,"Med","High"))))
 #newprevars<-c('sex','age','agesq','diabetestype',	'smokerstatus', 'd5y', 'nimp',	'bmi', 'wcpsi', 'rcpsi', 'lmppcnt','pvpsi', 'rwp', 'crp', 'plpsi', 'chpsi', 'cepsi', 'trpsi', 'gbpsi', 'hgp', 'mvpsi', 'pbp', 'cotlevel', 'scp', 'uap', 'bup', 'tpp', 'amp','ldpsi','sgp')
 #lmi<-mice(lm[,newprevars],method='pmm')
-#saveRDS(lmi,"../data/lmi.RDS")
-#write.csv(lmi,"../data/lmi.csv")
+#saveRDS(lmi,"data/lmi.RDS")
+#write.csv(lmi,"data/lmi.csv")
 
 
 #Checks on imputed values

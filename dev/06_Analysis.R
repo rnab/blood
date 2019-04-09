@@ -1,4 +1,3 @@
-setwd("C:/RNOneDrive/OneDrive/Documents/BBK/projects/blood/dev")
 
 library(dplyr)
 library(ggplot2)
@@ -8,7 +7,7 @@ library(pROC)
 library(caret)
 
 #Read in imputed labmort_all
-lm<-readRDS("../data/lmi.RDS")
+lm<-readRDS("data/lmi.RDS")
 #some tidying up
 lm$bmi<-round(lm$bmi,1)
 lm$f5y=as.factor(lm$d5y)
@@ -405,7 +404,7 @@ fit.models<-function(ds,testpart){
 
 x1=fit.models(lmc,1)
 
-write.csv(x1[[2]],"../data/fitted_complete.csv")
+write.csv(x1[[2]],"data/fitted_complete.csv")
 
 #What's the overlap between my model and tfail?
 
@@ -445,7 +444,7 @@ ggplot()+
   ggtitle("ROC curves: TEST DATA")
 
 out<-data.frame(rf1.p,lm$d5y)
-write.csv(out,"../data/rfout.csv")
+write.csv(out,"data/rfout.csv")
 
 
 #Compute ROC curves

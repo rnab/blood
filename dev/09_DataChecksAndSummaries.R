@@ -1,11 +1,9 @@
 #####Data checks and summaries#####
 
-setwd("C:/RNOneDrive/OneDrive/Documents/BBK/projects/blood/rnproj")
-
 #check properties of nhall is consistent with nhc and nh3
-nh3<-readRDS('../data/labmortNHA3.rds')
-nhc<-readRDS('../data/labmortNHAC.rds')
-nhall<-readRDS('../data/labmort_all.rds')
+nh3<-readRDS('data/labmortNHA3.rds')
+nhc<-readRDS('data/labmortNHAC.rds')
+nhall<-readRDS('data/labmort_all.rds')
 sum(nh3$seqn)
 sum(nhall$seqn[nhall$src=="nha3"])
 sum(nhc$seqn)

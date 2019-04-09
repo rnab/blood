@@ -1,40 +1,38 @@
-setwd("C:/RNOneDrive/OneDrive/Documents/BBK/projects/blood/dev")
-
 library(Hmisc)
 library(dplyr)
 
 getcont<-function(yr,demo_fn,biopro_fn,cbc_fn,crp_fn,mcq_fn,smq_fn,bmx_fn,diq_fn,pbc_fn,cot_fn)
 {
-  demo<-sasxport.get(paste("../contdata/demo/",demo_fn,sep=""))
+  demo<-sasxport.get(paste("contdata/demo/",demo_fn,sep=""))
   demo<-demo[,c('seqn','riagendr','ridageyr')]
   
-  biopro<-sasxport.get(paste("../contdata/biopro/",biopro_fn,sep=""))
+  biopro<-sasxport.get(paste("contdata/biopro/",biopro_fn,sep=""))
   
-  cbc<-sasxport.get(paste("../contdata/cbc/",cbc_fn,sep=""))
-  crp<-sasxport.get(paste("../contdata/crp/",crp_fn,sep=""))
+  cbc<-sasxport.get(paste("contdata/cbc/",cbc_fn,sep=""))
+  crp<-sasxport.get(paste("contdata/crp/",crp_fn,sep=""))
   
-  mcq<-sasxport.get(paste("../contdata/mcq/",mcq_fn,sep=""))
+  mcq<-sasxport.get(paste("contdata/mcq/",mcq_fn,sep=""))
   mcq<-mcq[,c('seqn','mcq160b','mcq160e','mcq160f','mcq160g','mcq160k','mcq220')]
   
-  smq<-sasxport.get(paste("../contdata/smq/",smq_fn,sep=""))
+  smq<-sasxport.get(paste("contdata/smq/",smq_fn,sep=""))
   smq<-smq[,c('seqn','smq020','smq040','smd055')]
   
-  bmx<-sasxport.get(paste("../contdata/bmx/",bmx_fn,sep=""))
+  bmx<-sasxport.get(paste("contdata/bmx/",bmx_fn,sep=""))
   bmx<-bmx[,c('seqn','bmxbmi')]
   
-  diq<-sasxport.get(paste("../contdata/diq/",diq_fn,sep=""))
+  diq<-sasxport.get(paste("contdata/diq/",diq_fn,sep=""))
   diq<-diq[,c('seqn','diq010','diq050')]
   
-  pbc<-sasxport.get(paste("../contdata/pbc/",pbc_fn,sep=""))
+  pbc<-sasxport.get(paste("contdata/pbc/",pbc_fn,sep=""))
   
   if (yr>2001){
-  cot<-sasxport.get(paste("../contdata/cot/",cot_fn,sep=""))
+  cot<-sasxport.get(paste("contdata/cot/",cot_fn,sep=""))
   }
   #general health condition was causing problems - so delete
-  #hsq<-sasxport.get(paste("../contdata/hsq/",hsq_fn,sep=""))
+  #hsq<-sasxport.get(paste("contdata/hsq/",hsq_fn,sep=""))
   #hsq<-hsq[,c('seqn','hsd010')]
   
-  mort<- read.fwf(paste("../contdata/mort/NHANES_",yr,"_",yr+1,"_MORT_2011_PUBLIC.dat",sep=""),widths=c(14,1,1,1,3,1,1,21,3,3,1,1,1,1,1))
+  mort<- read.fwf(paste("contdata/mort/NHANES_",yr,"_",yr+1,"_MORT_2011_PUBLIC.dat",sep=""),widths=c(14,1,1,1,3,1,1,21,3,3,1,1,1,1,1))
   colnames(mort)<-c("seqn","eligstat","mortstat","causeavl","ucod_leading","diabetes","hyperten","nothing","permth_int"
                     ,"permth_exm","mortsrce_ndi","mortsrce_cms","mortsrce_ssa","mortsrce_dc","mortsrce_dcl")
   mort<-mort[-c(8)]
@@ -202,11 +200,11 @@ labmort$riagendr<-as.factor(labmort$riagendr)
 
 
 #Save the continuous file
-saveRDS(labmort,"../data/labmortNHAC.RDS")
+saveRDS(labmort,"data/labmortNHAC.RDS")
 
 
 
-labmort_nha3<-readRDS('../data/labmortNHA3.rds')
+labmort_nha3<-readRDS('data/labmortNHA3.rds')
 
 f1=labmort_nha3[,nh3vars]
 f2=labmort[,nhcvars]
@@ -225,9 +223,9 @@ table(nimp,labmort_all$age)
 labmort_all$nimp<-nimp
 
 #Save the combined file
-saveRDS(labmort_all,"../data/labmort_all.RDS")
+saveRDS(labmort_all,"data/labmort_all.RDS")
 
-write.csv(labmort_all,"../data/labmort_all.csv")
+write.csv(labmort_all,"data/labmort_all.csv")
 
 ####Checks on combined files####
 
