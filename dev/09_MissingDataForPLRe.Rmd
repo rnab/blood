@@ -1,0 +1,214 @@
+---
+title: "Missing Data Example"
+author: "Ricki Nabeshima"
+date: "10 April 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+In this example we take an extract from the NHANES US Health Survey, which includes data on BMI, health, laboratory readings and mortality follow up.
+
+The goal is to fit a logistic regression model to predict death within 5 years of the survey using age and BMI.
+
+For illustrative puroses we set a portion of the BMIs to be missing in order to investigate a set of missing data methods:
+
++ Complete cases analysis
++ Median imputation
++ Hot Deck imputation
++ Multiple imputation by chained equations.
+
+
+#Setup
+Load the required libraries and set up an inverse logit function.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(mice)
+library(VIM)
+library(knitr)
+
+invlogit<-function(x){
+  return(exp(x)/(1+exp(x)))
+}
+```
+
+
+Read in the data and do some initial data prep and create a simple mortality table with loess smoothing.
+
+```{r}
+
+#Read in labmort_all
+labmort<-readRDS("../data/labmort_all.RDS")
+labmort<-labmort%>%mutate(bmi=round(bmi,0),nimp=as.factor(nimp),ageband=ifelse(age>80,8,floor(age/10)))%>%filter(age>=50,src!="2009",is.na(bmi)==F,is.na(fup)==F)
+
+#Build a mortality table to get expected qx
+labmort$cnt<-1
+m<-labmort%>%group_by(age,sex)%>%summarise(qx=sum(d5y)/sum(cnt))
+set.seed(14365)
+mm<-m[m$sex==1,]
+mm$pqx<-predict(loess(qx~age,data=mm))
+mplot<-ggplot(data=mm)+geom_point(aes(x=age,y=qx),col='blue')+geom_line(aes(x=age,y=pqx),col='red')+ggtitle("Probability of death in 5 years from entry: Males")+labs(x="Age at survey",y="")
+mf<-m[m$sex==2,]
+mf$pqx<-predict(loess(qx~age,data=mf))
+fplot<-ggplot(data=mf)+geom_point(aes(x=age,y=qx),col='blue')+geom_line(aes(x=age,y=pqx),col='red')+ggtitle("Probability of death in 5 years from entry: Females")+labs(x="Age at survey",y="")
+
+print(mplot)
+print(fplot)
+
+morttable<-rbind(mm,mf)
+
+```
+
+Filter the data to males only and notionally split into two datasets - one with full BMI data and one without.
+
+We will investigate different ways of completing the dataset with missing data and 
+
+```{r}
+
+labmort<-merge(labmort,morttable,by=c("sex","age"))%>%filter(sex==1,bmi>=15,bmi<=40)
+labmort<-labmort%>%mutate(bmi_true=bmi,bmi=ifelse(hasdiabetes==1,NA,bmi))
+
+```
+
+## Investigating the missing data
+
+At a very simple level we can just count the number of NAs in each variable.
+
+```{r}
+na_count <-sapply(labmort, function(y) sum(length(which(is.na(y)))))
+na_count <- data.frame(na_count)
+na_count$percmiss<-round(na_count$na_count/nrow(labmort)*100,2)
+print(na_count)
+```
+
+_MI::md.pattern_ is useful for investigating missingness patterns - can give some insight into the missingness mechanism.
+
+```{r}
+#Examine NA missingness pattern using md.pattern
+m=md.pattern(labmort[,1:26],rotate.names=T)
+```
+
+#Complete Cases Analysis
+Fit a logistic regression to this data. Automatic behaviour is to ignore all records with missing data.
+
+```{r}
+lmcc<-glm(d5y ~ age + I(age^2) + age+ bmi + I(bmi^2), family=binomial(link='logit'),data=labmort)
+labmort$p_cc<-invlogit(predict(lmcc,labmort%>%mutate(bmi=bmi_true)))
+```
+
+If we test this model on a new dataset what happens? We see that our model undershoots - since the missing data have higher mortality our model predictions come out too low.
+
+```{r}
+toPlot<-labmort%>%group_by(bmi_true)%>%summarise(AvE=sum(d5y)/sum(pqx),AvP=sum(p_cc)/sum(pqx))
+ggplot(data=toPlot)+geom_point(aes(x=bmi_true,y=AvE))+geom_line(aes(x=bmi_true,y=AvP))+ggtitle("Model fitted to complete cases only")
+```
+
+
+#Median Imputation
+Let's try imputing all missing BMIs with the median.
+
+```{r}
+#Median imputation
+medbmi<-median(labmort$bmi,na.rm=T)
+labmort<-mutate(labmort,bmi_median=ifelse(is.na(bmi)==T,medbmi,bmi))
+lmmed<-glm(d5y ~ age + I(age^2) + age+ bmi_median + I(bmi_median^2), family=binomial(link='logit'),data=labmort)
+labmort$p_median<-invlogit(predict(lmmed,labmort%>%mutate(bmi_median=bmi_true)))
+
+```
+
+Again let's inspect the fit on our unseen dataset...
+
+This is quite a lot better - but not fitting well to the higher BMIs.
+
+```{r}
+toPlot<-labmort%>%group_by(bmi_true)%>%summarise(AvE=sum(d5y)/sum(pqx),AvP=sum(p_median)/sum(pqx))
+ggplot(data=toPlot)+geom_point(aes(x=bmi_true,y=AvE))+geom_line(aes(x=bmi_true,y=AvP))+ggtitle("Model fitted to median-imputed dataset")
+```
+
+We can also have a look at the fit to the imputed dataset to understand why median imputation has lifted us up...
+
+Notice that all the missings have been put into the bmi=27 group. This isn't ideal and since actually the missings tend to be biased towards higher BMIs it doesn't put that extra mortality in the right place.
+
+
+```{r}
+toPlot<-labmort%>%group_by(bmi_median)%>%summarise(AvE=sum(d5y)/sum(pqx),AvP=sum(p_median)/sum(pqx))
+ggplot(data=toPlot)+geom_point(aes(x=bmi_median,y=AvE))+geom_line(aes(x=bmi_median,y=AvP))+ggtitle("Model fit to median-imputed dataset")
+
+```
+
+
+
+#Hot Deck Imputation
+
+Hot deck imputation using the VIM package - and partitioning on Ageband, Smokerstatus and Mortality (let's say we know from investigating the data that BMI seems to depend on these factors)
+
+Note that mortality is needed as partition variable!!!
+
+
+```{r}
+#Hot deck!
+#Important to check that we have a reasonable number of records in each partition
+table(labmort$ageband,labmort$smokerstatus,labmort$d5y)
+lmi<-hotdeck(data=labmort,variable = 'bmi',domain_var=c('ageband','smokerstatus','d5y'))
+labmort$bmi_hotdeck=lmi$bmi
+
+lmhotdeck<-glm(d5y ~ age + I(age^2) + age+ bmi_hotdeck + I(bmi_hotdeck^2), family=binomial(link='logit'),data=labmort)
+labmort$p_hotdeck<-invlogit(predict(lmhotdeck,labmort%>%mutate(bmi_hotdeck=bmi_true)))
+
+```
+
+This clearly fits much better.
+
+```{r}
+toPlot<-labmort%>%group_by(bmi_true)%>%summarise(AvE=sum(d5y)/sum(pqx),AvP=sum(p_hotdeck)/sum(pqx))
+ggplot(data=toPlot)+geom_point(aes(x=bmi_true,y=AvE))+geom_line(aes(x=bmi_true,y=AvP))+ggtitle("Model fitted to hotdeck-imputed dataset")
+```
+
+#Multiple imputation
+
+Now let's try a full multiple imputation exercise using the mice package. This essentially fits a model to each missing variable using all the other available variables in the dataset, then perfomrs some random draws from the models.
+
+```{r message=FALSE, warning=FALSE}
+#Multiple imputation
+
+labmort_reduced<-labmort[,1:22]
+labmort_mi<-mice(labmort_reduced)
+
+lmmi<-with(labmort_mi,glm(d5y ~ age + I(age^2) + age+ bmi+ I(bmi^2), family=binomial(link='logit')))
+pooled<-pool(lmmi)
+summary(pooled)
+
+pooled_lm = lmmi$analyses[[1]]
+pooled_lm$coefficients = summary(pooled)$estimate
+
+labmort$p_mi<-invlogit(predict(pooled_lm,labmort%>%mutate(bmi=bmi_true)))
+```
+
+Note that there's some behind-the-scenes work to get a single set of predictions out. 
+
+```{r}
+toPlot<-labmort%>%group_by(bmi_true)%>%summarise(AvE=sum(d5y)/sum(pqx),AvP=sum(p_mi)/sum(pqx))
+ggplot(data=toPlot)+geom_point(aes(x=bmi_true,y=AvE))+geom_line(aes(x=bmi_true,y=AvP))+ggtitle("Model fitted to multiply-imputed dataset")
+
+```
+
+#Model fitted to full data
+
+Now let's see what would have happened if we'd fitted the model to full data - i.e. the model we'd like to get to through our imputation methods.
+
+```{r}
+#Fit a logreg model to true bmi data
+lmtrue<-glm(d5y ~ age + I(age^2) + age+ bmi_true + I(bmi_true^2), family=binomial(link='logit'),data=labmort)
+labmort$p_true=invlogit(predict(lmtrue,labmort))
+```
+
+
+```{r}
+toPlot<-labmort%>%group_by(bmi_true)%>%summarise(AvE=sum(d5y)/sum(pqx),AvP=sum(p_true)/sum(pqx))
+ggplot(data=toPlot)+geom_point(aes(x=bmi_true,y=AvE))+geom_line(aes(x=bmi_true,y=AvP))+ggtitle("No missings - the best model")
+
+```
