@@ -1,9 +1,51 @@
-#Read and clean the NHANES III data
+library(tidyverse)
 
-mort<- read.fwf("data/NHANES_III_MORT_2011_PUBLIC.dat",widths=c(14,1,1,1,3,1,1,21,3,3,1,1,1,1,1))
-colnames(mort)<-c("seqn","eligstat","mortstat","causeavl","ucod_leading","diabetes","hyperten","nothing","fup"
-                  ,"permth_exm","mortsrce_ndi","mortsrce_cms","mortsrce_ssa","mortsrce_dc","mortsrce_dcl")
-mort<-mort[-c(8)]
+
+#Read and clean the NHANES III data
+setwd("~/Projects/Blood")
+
+# read in the fixed-width format ASCII file
+mort <- read_fwf(file="data/NHANES_III_MORT_2015_PUBLIC.dat",
+                col_types = "ciiiiiiiddii",
+                fwf_cols(publicid = c(1,14),
+                         eligstat = c(15,15),
+                         mortstat = c(16,16),
+                         ucod_leading = c(17,19),
+                         diabetes = c(20,20),
+                         hyperten = c(21,21),
+                         dodqtr = c(22,22),
+                         dodyear = c(23,26),
+                         wgt_new = c(27,34),
+                         sa_wgt_new = c(35,42),
+                         fup = c(43,45),
+                         permth_exm = c(46,48)
+                ),
+                na = "."
+)
+
+# create the ID (SEQN) for the NHANES surveys
+mort$seqn <- as.numeric(substr(mort$publicid,1,5))
+# NOTE:   SEQN is the unique ID for NHANES.
+
+#Drop NHIS variables
+mort <- select(mort, -publicid)
+mort <- select(mort, -dodqtr)
+mort <- select(mort, -dodyear)
+mort <- select(mort, -wgt_new)
+mort <- select(mort, -sa_wgt_new)
+
+
+
+
+
+
+
+# mort<- read.fwf("data/NHANES_III_MORT_2015_PUBLIC.dat",widths=c(14,1,1,1,3,1,1,21,3,3,1,1,1,1,1))
+# colnames(mort)<-c("seqn","eligstat","mortstat","causeavl","ucod_leading","diabetes","hyperten","nothing","fup"
+#                   ,"permth_exm","mortsrce_ndi","mortsrce_cms","mortsrce_ssa","mortsrce_dc","mortsrce_dcl")
+# 
+# 
+# mort<-mort[-c(8)]
 
 
 exam<-read.fwf("data/exam.dat",widths=c(5,1518,4,4706))
@@ -53,6 +95,7 @@ labmort<-merge(labmort,adult,by='seqn')
 #merge with exam file
 labmort<-merge(labmort,exam,by='seqn')
 
+#labmort$fup<-as.numeric(labmort$fup)
 
 labmort$d1y<-0
 labmort$d1y[labmort$mortstat==1 & labmort$fup<=12]<-1
@@ -294,7 +337,7 @@ table(nimp,labmort$age)
 
 
 
-saveRDS(labmort,"data/labmortNHA3.RDS")
+saveRDS(labmort,"data/labmortNHA3_2015.RDS")
 
 
 

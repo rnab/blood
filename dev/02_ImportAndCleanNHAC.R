@@ -32,16 +32,57 @@ getcont<-function(yr,demo_fn,biopro_fn,cbc_fn,crp_fn,mcq_fn,smq_fn,bmx_fn,diq_fn
   #hsq<-sasxport.get(paste("contdata/hsq/",hsq_fn,sep=""))
   #hsq<-hsq[,c('seqn','hsd010')]
   
-  mort<- read.fwf(paste("contdata/mort/NHANES_",yr,"_",yr+1,"_MORT_2011_PUBLIC.dat",sep=""),widths=c(14,1,1,1,3,1,1,21,3,3,1,1,1,1,1))
-  colnames(mort)<-c("seqn","eligstat","mortstat","causeavl","ucod_leading","diabetes","hyperten","nothing","permth_int"
-                    ,"permth_exm","mortsrce_ndi","mortsrce_cms","mortsrce_ssa","mortsrce_dc","mortsrce_dcl")
-  mort<-mort[-c(8)]
+  #OLD version
+  # mort<- read.fwf(paste("contdata/mort/NHANES_",yr,"_",yr+1,"_MORT_2015_PUBLIC.dat",sep=""),widths=c(14,1,1,1,3,1,1,21,3,3,1,1,1,1,1))
+  # colnames(mort)<-c("seqn","eligstat","mortstat","causeavl","ucod_leading","diabetes","hyperten","nothing","permth_int"
+  #                   ,"permth_exm","mortsrce_ndi","mortsrce_cms","mortsrce_ssa","mortsrce_dc","mortsrce_dcl")
+  # mort<-mort[-c(8)]
+  # mort$d1y<-0
+  # mort$d1y[mort$mortstat==1 & mort$permth_int<=12]<-1
+  # mort$d5y<-0
+  # mort$d5y[mort$mortstat==1 & mort$permth_int<=60]<-1
+  # mort$d10y<-0
+  # mort$d10y[mort$mortstat==1 & mort$permth_int<=120]<-1
+  
+  
+  # read in the fixed-width format ASCII file
+  mort <- read_fwf(file=paste("contdata/mort/NHANES_",yr,"_",yr+1,"_MORT_2015_PUBLIC.dat",sep=""),
+                   col_types = "ciiiiiiiddii",
+                   fwf_cols(publicid = c(1,14),
+                            eligstat = c(15,15),
+                            mortstat = c(16,16),
+                            ucod_leading = c(17,19),
+                            diabetes = c(20,20),
+                            hyperten = c(21,21),
+                            dodqtr = c(22,22),
+                            dodyear = c(23,26),
+                            wgt_new = c(27,34),
+                            sa_wgt_new = c(35,42),
+                            permth_int = c(43,45),
+                            permth_exm = c(46,48)
+                   ),
+                   na = "."
+  )
+  
+  # create the ID (SEQN) for the NHANES surveys
+  mort$seqn <- as.numeric(substr(mort$publicid,1,5))
+  # NOTE:   SEQN is the unique ID for NHANES.
+  
+  #Drop NHIS variables
+  mort <- select(mort, -publicid)
+  mort <- select(mort, -dodqtr)
+  mort <- select(mort, -dodyear)
+  mort <- select(mort, -wgt_new)
+  mort <- select(mort, -sa_wgt_new)
+  
   mort$d1y<-0
   mort$d1y[mort$mortstat==1 & mort$permth_int<=12]<-1
   mort$d5y<-0
   mort$d5y[mort$mortstat==1 & mort$permth_int<=60]<-1
   mort$d10y<-0
   mort$d10y[mort$mortstat==1 & mort$permth_int<=120]<-1
+  
+  
   
   out<-merge(demo,merge(cbc,merge(biopro,crp,by='seqn'),by='seqn'),by='seqn')
   out<-merge(out,mort,by='seqn')
@@ -200,11 +241,11 @@ labmort$riagendr<-as.factor(labmort$riagendr)
 
 
 #Save the continuous file
-saveRDS(labmort,"data/labmortNHAC.RDS")
+saveRDS(labmort,"data/labmortNHAC_2015.RDS")
 
 
 
-labmort_nha3<-readRDS('data/labmortNHA3.rds')
+labmort_nha3<-readRDS('data/labmortNHA3_2015.rds')
 
 f1=labmort_nha3[,nh3vars]
 f2=labmort[,nhcvars]
@@ -223,9 +264,9 @@ table(nimp,labmort_all$age)
 labmort_all$nimp<-nimp
 
 #Save the combined file
-saveRDS(labmort_all,"data/labmort_all.RDS")
+saveRDS(labmort_all,"data/labmort_all_2015.RDS")
 
-write.csv(labmort_all,"data/labmort_all.csv")
+write.csv(labmort_all,"data/labmort_all_2015.csv")
 
 ####Checks on combined files####
 
