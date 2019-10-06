@@ -7,7 +7,7 @@ library(pROC)
 library(caret)
 
 #Read in imputed labmort_all
-lm<-readRDS("data/lmi.RDS")
+lm<-readRDS("data/lmi_2015.RDS")
 #some tidying up
 lm$bmi<-round(lm$bmi,1)
 lm$f5y=as.factor(lm$d5y)
@@ -156,7 +156,7 @@ ggplot()+
   xlab("False Positive Rate")+ylab("True Positive Rate")+
   scale_color_manual(values = c("m3: Random Forest"="red","m1: Log. Regression"="black","m2: Neural Net"="blue"))+labs(colour="Model")
 
-ggsave("./outputs/m1-3ROC.png",plot=last_plot(),device='png',width=5,height=3,units="in")
+ggsave("output/m1-3ROC.png",plot=last_plot(),device='png',width=5,height=3,units="in")
 
 
 
@@ -216,8 +216,8 @@ rf3AUC<-c(roc(m21[[1]]$d5y,m21[[1]]$rf3.p)$auc,roc(m22[[1]]$d5y,m22[[1]]$rf3.p)$
 
 M2.Train.AUCSummary<-data.frame(rf1AUC,rf2AUC,rf3AUC)
 
-write.csv(M2.Test.AUCSummary,'./outputs/M2TestAUCSummary.csv')
-write.csv(M2.Train.AUCSummary,'./outputs/M2TrainAUCSummary.csv')
+write.csv(M2.Test.AUCSummary,'output/M2TestAUCSummary.csv')
+write.csv(M2.Train.AUCSummary,'output/M2TrainAUCSummary.csv')
 
 
 
@@ -249,7 +249,7 @@ ggplot()+
   xlab("False Positive Rate")+ylab("True Positive Rate")+
   scale_color_manual(values = c("m3: Blood, age, sex"="red","m3.1: Blood only"="black","m3.2: Full model"="grey"))+labs(colour="Model")
 
-ggsave("./outputs/M2ROC.png",plot=last_plot(),device='png',width=5,height=3,units="in")
+ggsave("output/M2ROC.png",plot=last_plot(),device='png',width=5,height=3,units="in")
 
 
 #### Comparison against Reference range approach####
@@ -273,7 +273,7 @@ cnt<-rep(1,NROW(pr.1))
 
 s<-aggregate(cnt~pr.1+pr.3+pr.5+tfail1+tfail2+tfail3+d5y,FUN='sum')
 
-write.csv(s,'./outputs/rr_comparison.csv')
+write.csv(s,'output/rr_comparison.csv')
 
 
 
@@ -293,7 +293,7 @@ ggplot()+
   xlab("False Positive Rate")+ylab("True Positive Rate")+
   scale_color_manual(values = c("m3: Blood, age, sex"="red","m3.1: Blood only"="black","m4: Reference Ranges"="grey"))+labs(colour="Model")
 
-ggsave("./outputs/RefRangeROC.png",plot=last_plot(),device='png',width=5,height=3,units="in")
+ggsave("output/RefRangeROC.png",plot=last_plot(),device='png',width=5,height=3,units="in")
 
 #What's the AUC of this?
 r$auc
@@ -348,8 +348,8 @@ rf1AUC<-c(roc(m31[[1]]$d5y,m31[[1]]$rf1.p)$auc,roc(m32[[1]]$d5y,m32[[1]]$rf1.p)$
 
 M3.Train.AUCSummary<-data.frame(rf1AUC)
 
-write.csv(M3.Test.AUCSummary,'./outputs/M3TestAUCSummary.csv')
-write.csv(M3.Train.AUCSummary,'./outputs/M3TrainAUCSummary.csv')
+write.csv(M3.Test.AUCSummary,'output/M3TestAUCSummary.csv')
+write.csv(M3.Train.AUCSummary,'output/M3TrainAUCSummary.csv')
 
 
 
@@ -404,7 +404,7 @@ fit.models<-function(ds,testpart){
 
 x1=fit.models(lmc,1)
 
-write.csv(x1[[2]],"data/fitted_complete.csv")
+write.csv(x1[[2]],"data/fitted_complete_2015.csv")
 
 #What's the overlap between my model and tfail?
 

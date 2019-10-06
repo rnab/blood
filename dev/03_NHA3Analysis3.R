@@ -1,7 +1,7 @@
 #This code performs an elastic net Cox regression on the variables in NHANES3 dataset
 #in order to identify the best predictors of mortality.
 
-nha3<-readRDS("data/labmortNHA3.RDS")
+nha3<-readRDS("data/labmortNHA3_2015.RDS")
 nha3<-nha3[nha3$age>=20,]
 nimp=nha3$hascancer+nha3$hasstroke+nha3$hasemphysema+nha3$hasheartattack+nha3$hasheartfailure+nha3$hasdiabetes
 nha3$nimp=ifelse(nimp>4,4,nimp)
@@ -28,7 +28,7 @@ xvar_nodupe<-c('wcp','lmppcnt','moppcnt','grppcnt','rcp','hgp','htp','mvpsi','mc
 na_count <-sapply(nha3[,xvar_nodupe], function(y) sum(length(which(is.na(y)))))
 na_count <- data.frame(na_count)
 na_count$var<-rownames(na_count)
-write.csv(na_count,"outputs/na.count.csv")
+#write.csv(na_count,"outputs/na.count.csv")
 #barplot(na_count$na_count)
 
 #missingness threshold 10%
@@ -110,7 +110,7 @@ tomodel.final.cc<-tomodel.final[complete.cases(tomodel.final),]
 
 
 
-sel.cox<-coxph(Surv(fup,mortstat)~ age+I(age^2) + sex + bmi + nimp + smokerstatus+ wcp +  rwp  +  dwp +
+sel.cox<-coxph(Surv(fup,mortstat)~ age+I(age^2) + sex + bmi + smokerstatus+ wcp +  rwp  +  dwp +
                  pbp  +    acp  +    bxp + lyp + cop+sep  +    crp   +        clpsi    +       sgp  +     cep+        
                  ldpsi  +    appsi   +   amp + I(grppcnt^2)+I(mvpsi^2)+I(uap^2)+ I(bup^2)+I(tpp^2)
                +grppcnt+mvpsi+uap+bup+tpp, data=tomodel.final.cc)
@@ -118,7 +118,7 @@ sel.cox<-coxph(Surv(fup,mortstat)~ age+I(age^2) + sex + bmi + nimp + smokerstatu
 summary(sel.cox)
 
 #Stratified model
-sel.cox.strat<-coxph(Surv(fup,mortstat)~ strata(strat) + age+I(age^2) + sex + bmi + nimp + smokerstatus+ wcp +  rwp  +  dwp +
+sel.cox.strat<-coxph(Surv(fup,mortstat)~ strata(strat) + age+I(age^2) + sex + bmi + smokerstatus+ wcp +  rwp  +  dwp +
                  pbp  +    acp  +    bxp + lyp + cop+sep  +    crp   +        clpsi    +       sgp  +     cep+        
                  ldpsi  +    appsi   +   amp + I(grppcnt^2)+I(mvpsi^2)+I(uap^2)+ I(bup^2)+I(tpp^2)
                +grppcnt+mvpsi+uap+bup+tpp, data=tomodel.final.cc)

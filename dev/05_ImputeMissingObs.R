@@ -3,7 +3,7 @@ library(ggplot2)
 library(mice)
 
 #Read in labmort_all
-lm<-readRDS("data/labmort_all.RDS")
+lm<-readRDS("data/labmort_all_2015.RDS")
 lm$bmi<-round(lm$bmi,1)
 lm$nimp<-as.factor(lm$nimp)
 #lm$d1y<-as.factor(lm$d1y)
@@ -12,7 +12,8 @@ lm$nimp<-as.factor(lm$nimp)
 lm$ageband<-ifelse(lm$age>80,8,floor(lm$age/10))
 
 #Only have partial follow up in last year so discard 2009
-lm<-lm[lm$src!="2009",]
+#lm<-lm[lm$src!="2009",]
+
 #Discard anyone below 20
 lm<-lm[lm$age>=20,]
 
@@ -32,7 +33,7 @@ names(tomiss)<-c('sex','age','d5y','bmi','nimp','smokerstatus','wbc','rbc','lmp'
 
 m=md.pattern(tomiss)
 #z<-data.frame(m)
-write.csv(m,"./outputs/misspattern.csv")
+write.csv(m,"output/misspattern.csv")
 
 
 
@@ -45,7 +46,7 @@ table(lm$ageband,lm$smokerstatus,lm$d5y)
 
 
 impcells<-lm%>%count(ageband,smokerstatus,d5y)
-write.csv(impcells,'./outputs/impcells.csv')
+write.csv(impcells,'output/impcells.csv')
 
 
 hdvars<-c(	'bmi', 'wcpsi', 'rcpsi', 'lmppcnt','pvpsi', 'rwp', 'crp', 'plpsi', 'chpsi', 'cepsi', 'trpsi', 'gbpsi', 'hgp', 'mvpsi', 'pbp', 'cop', 'scp', 'uap', 'bup', 'tpp', 'amp','ldpsi','sgp')
@@ -110,7 +111,6 @@ PlotSMR(lmi_m$wcpsi,lmi_m$wcpsi_imp,lmi_m$d5y,lmi_m$pqx,0.02,0.98,0,"White Blood
 PlotSMR(lmi_m$rcpsi,lmi_m$rcpsi_imp,lmi_m$d5y,lmi_m$pqx,0.01,0.99,1,"Red Blood Cell Count",0.05)
 PlotSMR(lmi_m$rwp,lmi_m$rwp_imp,lmi_m$d5y,lmi_m$pqx,0.01,0.99,1,"Red Blood Cell Distribution Width",0.05)
 PlotSMR(lmi_m$pbp,lmi_m$pbp_imp,lmi_m$d5y,lmi_m$pqx,0.01,0.99,0,"Lead (ug dL)",0.5)
-PlotSMR(lmi_m$sepsi,lmi_m$sepsi_imp,lmi_m$d5y,lmi_m$pqx,0.02,0.98,-1,"Serum Selenium (ng mL)",5)
 
 
 ###Rblood cell count example plot ###
@@ -126,12 +126,12 @@ toplot<-z[z[,1]<b & z[,1]>a,]
 p=ggplot(data=toplot,aes(x=toplot[,1],y=toplot[,5],col=imputed))+geom_point()+
   ggtitle("5yr SMR by Red Blood Cell Count")+labs(x="Red Blood Cell Count",y="Standardised Mortality Ratio (5yr)")+geom_errorbar(aes(ymin=ave-1.96*se, ymax=ave+1.96*se), width=0.05/2)
 p
-ggsave(filename="RBCImpExample.png",device="png",path="./outputs",width=8,height=4,p)
+ggsave(filename="RBCImpExample.png",device="png",path="output/",width=8,height=4,p)
 
 
 ####Save Imputed Datasets ####
-saveRDS(lmi,"data/lmi.RDS")
-write.csv(lmi,"data/lmi.csv")
+saveRDS(lmi,"data/lmi_2015.RDS")
+write.csv(lmi,"data/lmi_2015.csv")
 
 
 ####MODEL IMPUTATION####

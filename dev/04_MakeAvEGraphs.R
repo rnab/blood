@@ -5,7 +5,7 @@ library(ggplot2)
 library(gridExtra)
 
 #nhall<-readRDS("data/labmort_all.RDS")
-nha3<-readRDS("data/labmortNHA3.RDS")
+nha3<-readRDS("data/labmortNHA3_2015.RDS")
 nha3<-nha3[nha3$age>=20,]
 
 #create a compound impairment variable
@@ -37,7 +37,7 @@ mf$pqx<-predict(loess(qx~age,data=mf))
 fplot<-ggplot(data=mf)+geom_point(aes(x=age,y=qx),col='blue')+geom_line(aes(x=age,y=pqx),col='red')+ggtitle("Probability of death in 5 years from entry: Females")+labs(x="Age at survey",y="")
 
 g <- arrangeGrob(mplot,fplot,nrow=1)
-ggsave(filename="mort.png",path="./smr/",g)
+ggsave(filename="mort.png",path="output/smr/",g)
 
 
 #Now need to merge this back onto nha3 as qx
@@ -75,7 +75,7 @@ grid.arrange(p,q,nrow=2)
 
 g <- arrangeGrob(p,q, nrow=2) #generates g
 
-ggsave(filename=paste(vname,".png",sep=""),device="png",path="./smr",width=8,height=6,g)
+ggsave(filename=paste(vname,".png",sep=""),device="png",path="output/smr",width=8,height=6,g)
 }
 
 
@@ -133,10 +133,10 @@ z<-aggregate(cbind(nha3$d5y,nha3$qx)~copgrp+nha3$smokerstatus,FUN='sum')
 z$ave<-z[,3]/z[,4]
 z$se=sqrt(z[,3])/z[,4]
 
-write.csv(z,"./smr/cotinine.csv")
+write.csv(z,"output/smr/cotinine.csv")
 
 
 ####Quick lead analysis###
-nhall<-readRDS("data/labmort_all.RDS")
+nhall<-readRDS("data/labmort_all_2015.RDS")
 z=aggregate(nhall$pbp~nhall$src,FUN='mean',na.rm=T)
-write.csv(z,"./smr/bloodlead.csv")
+write.csv(z,"output/smr/bloodlead.csv")
